@@ -1,0 +1,318 @@
+{
+  "name": "KTP OCR recognition",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ocr-ktp",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        208,
+        48
+      ],
+      "id": "33e8d34b-2f91-4976-b907-c338ad5a3607",
+      "name": "Webhook",
+      "webhookId": "e20cba68-1d75-40fc-b684-7119f0c08915"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $binary.data['fileExtension'] }}",
+                    "rightValue": "png",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "22c972e1-d8cb-49b7-8072-6f86cbdd5254"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PNG"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0cc60dd4-363b-4785-a018-5c4c63805678",
+                    "leftValue": "={{ $binary.data['fileExtension'] }}",
+                    "rightValue": "jpeg",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "JPEG"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1853c1a4-5ff8-405c-956c-69e124aff14c",
+                    "leftValue": "={{ $binary.data['fileExtension'] }}",
+                    "rightValue": "pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        48
+      ],
+      "id": "e964ebc3-6c67-4467-8961-3f81a3e980ba",
+      "name": "Switch",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        688,
+        -224
+      ],
+      "id": "1e2fe738-3bc1-4a7e-887e-4e680cd1327f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyAx9y9vbVMpYvfic-zqWoTDso2IH37q3hI"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"inlineData\": {\n            \"mimeType\": \"{{$('Merge').item.binary.data.mimeType}}\",\n            \"data\": \"{{$json.data}}\"\n          }\n        },\n        {\n          \"text\": \"Please extract all text from this image verbatim, just send back response only\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1104,
+        -224
+      ],
+      "id": "0cf062fe-1aa7-4897-aa5c-5410fbf859f8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -224
+      ],
+      "id": "655e0351-caa5-406b-8b11-4e396d4f84d4",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.candidates[0].content.parts[0].text }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"state\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"fullname\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"address\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"dob\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"pob\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"blood_type\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"marital_status\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n      \"job\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"nationality\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"religion\": {\n\t\t\t\"type\": \"string\"\n\t\t}\n\t}\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        -224
+      ],
+      "id": "63037a38-6aa7-41bc-908a-79daae138a4f",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        -80
+      ],
+      "id": "468ebb84-c467-4f8e-b358-8180085606ef",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4Uv6ktRVwvZT6NrT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "= {\n    \"data\": {\n      \"state\": \"{{ $json.output.state }}\",\n      \"fullname\": \"{{ $json.output.fullname }}\",\n      \"address\": \"{{ $json.output.address }}\",\n      \"dob\": \"{{ $json.output.dob }}\",\n      \"pob\": \"{{ $json.output.pob }}\",\n      \"blood_type\": \"{{ $json.output.blood_type }}\",\n      \"marital_status\": \"{{ $json.output.marital_status }}\",\n      \"job\": \"{{ $json.output.job }}\",\n      \"nationality\": \"{{ $json.output.nationality }}\",\n      \"religion\" : \"{{ $json.output.religion }}\"\n    }\n  }",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1680,
+        -224
+      ],
+      "id": "3e0c4672-749f-42a7-acb8-3deabbe63bcd",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "486e7aa5-eefa-46b0-9cb1-ecbca5ceed92",
+  "meta": {
+    "templateId": "self-building-ai-agent",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ae3ff3f90be70f62ff332c8188dc5c65e00affa03c93bacfccff5b1815ce4ce7"
+  },
+  "id": "AHB7HxRTopeCsKPb",
+  "tags": []
+}

@@ -1,0 +1,157 @@
+{
+  "name": "auto reply chat wa",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "@devlikeapro/n8n-nodes-waha.wahaTrigger",
+      "typeVersion": 202502,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cb678472-6c23-4dab-b7e6-2a0bbf3fbe2a",
+      "name": "WAHA Trigger",
+      "webhookId": "d8cf17f2-a2a3-435f-8db4-507d5ecfcc88"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('WAHA Trigger').item.json.payload.body }}",
+        "options": {
+          "systemMessage": "Kamu adalah bot penjawab chat dery untuk response cepat, dan efisien. jika ada chat yang mungkin belum terbaca, segera prompt message dengan manusiawi kecuali di grup chat \"Dapur Snap\" dan ALLO x SYB (PLN Postpaid) dan Developer Application Management dan GBR 3  RT 11/25, jika ada chat mengenai masalah teknis seperti hal programming ,pengecekan bug dan error boleh untuk membalas ini \"tolong perlihatkan screenshot log, saya akan coba lagi jika sudah didepan laptop\"."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        688,
+        304
+      ],
+      "id": "7da759dc-9ded-4f18-85d4-7aefc2c765bb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        624,
+        544
+      ],
+      "id": "1a5e9783-4f60-41d0-98ad-b1c14e47e262",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4Uv6ktRVwvZT6NrT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "text": "={{ $json.output }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1040,
+        304
+      ],
+      "id": "098be95f-560c-43fe-ac4e-40e843eaa5d0",
+      "name": "Send a text message",
+      "credentials": {
+        "wahaApi": {
+          "id": "UfpSTR8MvKszgjdh",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Start Typing",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        352,
+        144
+      ],
+      "id": "74fb7605-37c4-4312-b8b6-64265271ab28",
+      "name": "Start Typing",
+      "credentials": {
+        "wahaApi": {
+          "id": "UfpSTR8MvKszgjdh",
+          "name": "WAHA account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WAHA Trigger": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Start Typing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Typing": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "72c9a954-5812-456d-b428-356ea7d6bcb6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ae3ff3f90be70f62ff332c8188dc5c65e00affa03c93bacfccff5b1815ce4ce7"
+  },
+  "id": "Mtlu1ES9f708nVJv",
+  "tags": []
+}
